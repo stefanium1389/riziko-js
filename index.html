@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Riziko</title>
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+  <div>
+    <nav><span>Phase: <span id="phase">Deployment</span></span><span>Turn: <span id="turn">Red</span></span></nav>
+    <div class="mainGame">
+      <div>
+        <canvas id="canvas" width="640" height="586">
+        </canvas>
+        <button id="next-phase-btn" onclick="nextPhase()">Next phase</button>
+      </div>      
+      <div id="intel-column" class="column2">
+      </div>
+      <div class="mainGame">
+        <div id="attack" class="column2">
+          <h3>Attack</h3>
+          <div>From Province: <span id="province-from"></span></div>
+          <div>To Province: <span id="province-to"></span></div>
+          <button onclick="attack()">Attack</button>
+          <div id="attack-stats"></div>
+        </div>
+        <div id="deploy" class="column2">
+          <h3>Deploy</h3>
+          <div>Available troops: <span id="deployment-available"></span></div>
+          <div>To Province: <span id="deployment-province"></span></div>
+          <div>Amount: <input id="deployment-amount" type="number"></input></div>
+          <button onclick="deploy()">Deploy</button>
+        </div>
+        <div id="transfer" class="column2">
+          <h3>Transfer</h3>
+          <div>From Province: <span id="transfer-from"></span></div>
+          <div>To Province: <span id="transfer-to"></span></div>
+          <div>Amount: <input id="transfer-amount" type="number"></input></div>
+          <button onclick="transfer()">Transfer</button>
+        </div>
+      </div>
+    </div>
+    <script src="index.js"></script>
+    <div style="display: none;">
+      <!-- Image sprites for the game-->
+      <img id="background" src="background.bmp" />
+      <img id="tank-red" src="img/tank-red.bmp" />
+      <img id="tank-green" src="img/tank-green.bmp" />
+      <img id="tank-blue" src="img/tank-blue.bmp" />
+      <img id="tank-purple" src="img/tank-purple.bmp" />
+      <img id="tank-yellow" src="img/tank-yellow.bmp" />
+      <img id="tank-black" src="img/tank-black.bmp" />
+    </div>
+  </div>
+</body>
+
+</html>

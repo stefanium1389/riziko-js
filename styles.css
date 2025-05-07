@@ -1,0 +1,73 @@
+/* Styles.css */
+nav {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.mainGame {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.resourcesAndBuildings {
+    display: flex;
+    justify-content: space-between;
+    width: 66vw;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    align-content: center;
+}
+
+.column_scrollable {
+    max-height: 80vh;
+    overflow-y: scroll;
+}
+
+canvas {
+    width: 640px;
+    max-height: 586px;
+    image-rendering: pixelated;
+    border: 1px;
+    border-style: dashed;
+}
+
+.column2 {
+    width: 50%; /* Each column will take up one-third of the container */
+    padding: 10px;
+    box-sizing: border-box; /* Ensures padding does not affect the width */
+    min-height: 400px;
+}
+
+.column {
+    padding: 10px;
+    box-sizing: border-box; /* Ensures padding does not affect the width */
+}
+
+/* Optional: Adding spacing or borders to visually separate columns */
+.column:not(:last-child) {
+    margin-right: 20px; /* Adjust as needed */
+}
+
+.tooltip {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 2px;
+    border: 1px;
+    border-style: dotted;
+    font-size: 12px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.no-cursor {
+    cursor: none;
+}

@@ -2,14 +2,16 @@ const canvas = document.getElementById("canvas");
 let gameOver = false
 const tank_coords = []
 const possible_players = ["Red", "Blue", "Green", "Purple", "Yellow", "Black"]
-let players_play = [true, true, true, false, false, false]
+let players_play = [true, true, false, false, false, false]
 let players = ["Red", "Blue", "Green", "Yellow", "Black"]
+let player_cards = []
 let turn = "Red"
 let troopsForDeployment = 0
 const possible_phases = ["Deployment", "Combat", "Transfer"]
 let phase = "Deployment"
 const attackerMaxDice = 3
 const defenderMaxDice = 3
+let conqueredProvince = false
 const ctx = canvas.getContext("2d");
 const bgr = document.getElementById("bgr")
 const continents = [
@@ -97,14 +99,14 @@ function renderState() {
     }
     const from = document.getElementById("province-from")
     if (provinces[fromProvince]) {
-        from.innerText = provinces[fromProvince].name
+        from.innerText = provinces[fromProvince].name + " (" + provinces[fromProvince].armies + ")"
     }
     else {
         from.innerText = ""
     }
     const to = document.getElementById("province-to")
     if (provinces[toProvince]) {
-        to.innerText = provinces[toProvince].name
+        to.innerText = provinces[toProvince].name + " (" + provinces[toProvince].armies + ")"
     }
     else {
         to.innerText = ""
@@ -136,7 +138,15 @@ function renderState() {
     else {
         transferTo.innerText = ""
     }
+    const turnInCardsButton = document.getElementById("turn-in-cards-btn")
+    turnInCardsButton.classList.add("invisible")
+    turnInCardsButton.style.display = "none"
+    if(player_cards[players.indexOf(turn)].length >=3 ){
+        turnInCardsButton.style.display = "block"
+    }
+    turnInCardsButton.display = ""
     renderIntel()
+    renderCards()
     renderCanvas()
 }
 
@@ -725,7 +735,7 @@ const provinces = [
             x: 216,
             y: 192
         },
-        adjacencies: [6, 41, 42, 43, 40]
+        adjacencies: [6, 42, 43, 40, 39]
     },
     {
         name: "Bečej",
@@ -880,6 +890,7 @@ function attack() {
     combatStats = rollDice(from, to)
     showCombat(combatStats)
     if (to.armies < 1) {
+        let defeatedPlayer = to.owner
         to.owner = from.owner
         setTimeout(() => {
             let aNumber = Number(prompt("Transfer troops (1-" + (from.armies - 1) + ")"))
@@ -889,7 +900,11 @@ function attack() {
             }
             to.armies += aNumber
             from.armies -= aNumber
-
+            conqueredProvince = true
+            if(playerIsDead(defeatedPlayer))
+            {
+                transferCards(defeatedPlayer, turn)
+            }
             renderState()
             checkWin()
         }, 0)
@@ -979,9 +994,19 @@ function nextPhase() {
                 break;
             }
             if (i == 0) {
+                let playerIndex = players.indexOf(turn)
                 if (troopsForDeployment > 0) {
                     alert("You need to deploy all your troops first!")
                     return;
+                }
+                if (player_cards[playerIndex].length >= 5) {
+                    alert("You must turn in your cards")
+                    return;
+                }
+            }
+            if (i == 1) {
+                if (conqueredProvince) {
+                    getCard(turn)
                 }
             }
             phase = possible_phases[i + 1]
@@ -992,6 +1017,7 @@ function nextPhase() {
 }
 
 function nextPlayer() {
+    conqueredProvince = false
     for (let i = 0; i < players.length; i++) {
         if (turn == players[i]) {
             if (i == players.length - 1) {
@@ -1136,7 +1162,7 @@ function initialiseGame() {
     }
     for (let i = 0; i < players.length; i++) {
         for (let j = 0; j < playerProvinces[i].length; j++) {
-            
+
             provinces[playerProvinces[i][j]].owner = players[i]
             provinces[playerProvinces[i][j]].armies = 1
         }
@@ -1153,19 +1179,21 @@ function initialiseGame() {
     for (let i = players.length; i > 0; i--) {
         armiesForPlayer -= 5
     }
-    for( let i = 0; i < players.length; i++)
-    {
+    for (let i = 0; i < players.length; i++) {
         let armiesOfPlayer = armiesForPlayer - getTotalArmy(players[i])
-        while(armiesOfPlayer > 0)
-        {
-            provinces[playerProvinces[i][Math.floor(Math.random()*playerProvinces[i].length)]].armies++;
+        while (armiesOfPlayer > 0) {
+            provinces[playerProvinces[i][Math.floor(Math.random() * playerProvinces[i].length)]].armies++;
             armiesOfPlayer--;
         }
     }
     troopsForDeployment = countTroopsForDeployment(players[0])
+    for (let i = 0; i < players.length; i++) {
+        player_cards.push([])
+    }
 }
 
 initialiseGame()
+
 function shuffle(array) {
     let currentIndex = array.length;
 
@@ -1179,5 +1207,365 @@ function shuffle(array) {
         // And swap it with the current element.
         [array[currentIndex], array[randomIndex]] = [
             array[randomIndex], array[currentIndex]];
+    }
+}
+
+let drawnCards = new Set()
+const cards = [
+    {
+        name: "Sombor",
+        img: "sombor.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Apatin",
+        img: "apatin.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Odžaci",
+        img: "odzaci.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Kula",
+        img: "kula.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Subotica",
+        img: "subotica.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Bačka Topola",
+        img: "backa_topola.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Mali Iđoš",
+        img: "mali_idjos.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Kanjiža",
+        img: "kanjiza.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Senta",
+        img: "senta.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Ada",
+        img: "ada.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Novi Kneževac",
+        img: "novi_knezevac.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Čoka",
+        img: "coka.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Kikinda",
+        img: "kikinda.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Novi Bečej",
+        img: "novi_becej.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Zrenjanin",
+        img: "zrenjanin.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Žitište",
+        img: "zitiste.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Nova Crnja",
+        img: "nova_crnja.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Sečanj",
+        img: "secanj.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Opovo",
+        img: "opovo.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Kovačica",
+        img: "kovačica.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Alibunar",
+        img: "alibunar.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Plandište",
+        img: "plandiste.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Vršac",
+        img: "vrsac.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Bela Crkva",
+        img: "bela_crkva.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Kovin",
+        img: "kovin.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Pančevo",
+        img: "pancevo.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Šid",
+        img: "sid.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Sremska Mitrovica",
+        img: "sremska_mitrovica.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Irig",
+        img: "irig.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Ruma",
+        img: "ruma.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Pećinci",
+        img: "pecinci.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Stara Pazova",
+        img: "stara_pazova.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Inđija",
+        img: "indjija.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Titel",
+        img: "titel.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Sremski Karlovci",
+        img: "sremski_karlovci.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Novi Sad",
+        img: "novi_sad.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Beočin",
+        img: "beocin.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Bačka Palanka",
+        img: "backa_palanka.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Bač",
+        img: "bac.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Vrbas",
+        img: "vrbas.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Temerin",
+        img: "temerin.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Srbobran",
+        img: "srbobran.bmp",
+        cardType: "Artillery"
+    },
+    {
+        name: "Bečej",
+        img: "becej.bmp",
+        cardType: "Infantry"
+    },
+    {
+        name: "Žabalj",
+        img: "zabalj.bmp",
+        cardType: "Cavalry"
+    },
+    {
+        name: "Bački Petrovac",
+        img: "backi_petrovac.bmp",
+        cardcardType: "Artillery"
+    },
+]
+
+function getCard(player) {
+    let playerIndex = players.indexOf(player)
+    let randomCardIndex = Math.floor(Math.random() * cards.length)
+    while (drawnCards.has(randomCardIndex)) {
+        randomCardIndex = Math.floor(Math.random() * cards.length)
+    }
+    player_cards[playerIndex].push(randomCardIndex)
+    drawnCards.add(randomCardIndex)
+    console.log(player_cards)
+}
+
+function turnInCards() {
+    let playerIndex = players.indexOf(turn)
+    console.log(playerIndex)
+    console.log(player_cards[playerIndex])
+    let infantryCards = []
+    let cavalryCards = []
+    let artilleryCards = []
+    for (let i = 0; i < player_cards[playerIndex].length; i++) {
+        if (cards[player_cards[playerIndex][i]].cardType == "Infantry") {
+            
+            infantryCards.push(player_cards[playerIndex][i]);
+        }
+        if (cards[player_cards[playerIndex][i]].cardType == "Cavalry") {
+            cavalryCards.push(player_cards[playerIndex][i]);
+        }
+        if (cards[player_cards[playerIndex][i]].cardType == "Artillery") {
+            artilleryCards.push(player_cards[playerIndex][i])
+        }
+    }
+    console.log(infantryCards)
+    console.log(cavalryCards)
+    console.log(artilleryCards)
+    if (infantryCards.length >= 3) {
+        for (let i = 0; i < 3; i++) {
+            const index = player_cards[playerIndex].indexOf(infantryCards[i]);
+            if (index > -1) {
+                player_cards[playerIndex].splice(index, 1);
+            }
+            drawnCards.delete(infantryCards[i])
+
+        }
+        troopsForDeployment += 4
+    }
+    if (cavalryCards.length >= 3) {
+        for (let i = 0; i < 3; i++) {
+            const index = player_cards[playerIndex].indexOf(cavalryCards[i]);
+            if (index > -1) {
+                player_cards[playerIndex].splice(index, 1);
+            }
+            drawnCards.delete(cavalryCards[i])
+        }
+        troopsForDeployment += 6
+    }
+    if (artilleryCards.length >= 3) {
+        for (let i = 0; i < 3; i++) {
+            const index = player_cards[playerIndex].indexOf(artilleryCards[i]);
+            if (index > -1) {
+                player_cards[playerIndex].splice(index, 1);
+            }
+            drawnCards.delete(artilleryCards[i])
+        }
+        troopsForDeployment += 8
+    }
+    if (artilleryCards.length >= 1 && cavalryCards.length >= 1 && infantryCards.length >= 1) {
+        let artilleryCard = artilleryCards.pop()
+        let cavalryCard = cavalryCards.pop()
+        let infantryCard = infantryCards.pop()
+        let index = player_cards[playerIndex].indexOf(artilleryCard);
+        if (index > -1) {
+            player_cards[playerIndex].splice(index, 1);
+        }
+        index = player_cards[playerIndex].indexOf(cavalryCard);
+        if (index > -1) {
+            player_cards[playerIndex].splice(index, 1);
+        }
+        index = player_cards[playerIndex].indexOf(infantryCard);
+        if (index > -1) {
+            player_cards[playerIndex].splice(index, 1);
+        }
+        drawnCards.delete(artilleryCard)
+        drawnCards.delete(cavalryCard)
+        drawnCards.delete(infantryCard)
+        troopsForDeployment += 10
+    }
+    renderState()
+}
+
+function transferCards(fromPlayer, toPlayer){
+    let fromIndex = players.indexOf(fromPlayer)
+    let toIndex = players.indexOf(toPlayer)
+    for(let i = 0; i < player_cards[fromIndex]; i++)
+    {
+        let cardIndex = player_cards[fromIndex].pop()
+        player_cards[toIndex].push(cardIndex)
+    }
+    if(player_cards[toIndex].length >= 5)
+    {
+        phase = possible_phases[0]
+    }
+}
+
+function renderCards(){
+    const cardsDiv = document.getElementById("my-cards")
+    cardsDiv.innerHTML = ""
+    let playerIndex = players.indexOf(turn)
+    for(let i = 0; i < player_cards[playerIndex].length; i++)
+    {
+        let logicCard = cards[player_cards[playerIndex][i]]
+        const card = document.createElement("div")
+        card.classList.add("card")
+        const title = document.createElement("b")
+        title.innerText = logicCard.name
+        const image = document.createElement("img")
+        image.src = "img/"+logicCard.img
+        image.style = "width: 50px; height 50px;"
+        image.alt = logicCard.img
+        const cardType = document.createElement("img")
+        cardType.src = "img/"+logicCard.type+".bmp"
+        cardType.style = "width: 50px; height 50px;"
+        cardType.alt = logicCard.cardType
+
+        card.appendChild(title)
+        card.appendChild(document.createElement("br"))
+        card.appendChild(image)
+        card.appendChild(cardType)
+
+        cardsDiv.appendChild(card)
     }
 }

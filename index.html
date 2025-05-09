@@ -30,11 +30,15 @@
           <div id="attack-stats"></div>
         </div>
         <div id="deploy" class="column2">
-          <h3>Deploy</h3>
-          <div>Available troops: <span id="deployment-available"></span></div>
-          <div>To Province: <span id="deployment-province"></span></div>
-          <div>Amount: <input id="deployment-amount" type="number"></input></div>
-          <button onclick="deploy()">Deploy</button>
+          <div>
+            <h3>Deploy</h3>
+            <div>Available troops: <span id="deployment-available"></span></div>
+            <div>To Province: <span id="deployment-province"></span></div>
+            <div>Amount: <input id="deployment-amount" type="number"></input></div>
+            <button onclick="deploy()">Deploy</button>
+          </div>
+          <div id="my-cards"></div>
+          <button id="turn-in-cards-btn"onclick="turnInCards()">Turn in cards</button>
         </div>
         <div id="transfer" class="column2">
           <h3>Transfer</h3>

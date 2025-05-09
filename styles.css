@@ -71,3 +71,17 @@ canvas {
 .no-cursor {
     cursor: none;
 }
+
+.card {
+    border-radius: 5px;
+    border-width: 2px;
+    border-style: solid;
+    box-shadow: inset;
+    margin: 5px;
+    align-items: center;
+    width: 100px;
+    height: 150px;
+}
+#my-cards {
+    display: flex;
+}

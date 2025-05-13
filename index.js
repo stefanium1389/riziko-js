@@ -1532,13 +1532,16 @@ function turnInCards() {
 }
 
 function transferCards(fromPlayer, toPlayer){
+    console.log(player_cards)
     let fromIndex = players.indexOf(fromPlayer)
     let toIndex = players.indexOf(toPlayer)
-    for(let i = 0; i < player_cards[fromIndex]; i++)
+    for(let i = 0; i < player_cards[fromIndex].length; i++)
     {
-        let cardIndex = player_cards[fromIndex].pop()
-        player_cards[toIndex].push(cardIndex)
+        let card = player_cards[fromIndex][i]
+        console.log(card)
+        player_cards[toIndex].push(card)
     }
+    player_cards[fromIndex] = []
     if(player_cards[toIndex].length >= 5)
     {
         phase = possible_phases[0]

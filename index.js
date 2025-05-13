@@ -2,7 +2,7 @@ const canvas = document.getElementById("canvas");
 let gameOver = false
 const tank_coords = []
 const possible_players = ["Red", "Blue", "Green", "Purple", "Yellow", "Black"]
-let players_play = [true, true, false, false, false, false]
+let players_play = [true, true, true, true, true, true]
 let players = ["Red", "Blue", "Green", "Yellow", "Black"]
 let player_cards = []
 let turn = "Red"
@@ -1062,8 +1062,12 @@ function renderIntel() {
         armyStats.innerText = "Total army: " + getTotalArmy(player) + " (+" + countTroopsForDeployment(player) + ")"
         playerDiv.appendChild(armyStats)
         let provinceCount = document.createElement("div")
-        provinceCount.innerText = "Provinces: " + provinces.filter(province => province.owner === player).length
+        let cardCount = document.createElement("div")
         playerDiv.appendChild(provinceCount)
+        cardCount.innerText = "Cards: "+ player_cards[players.indexOf(player)].length;
+        provinceCount.innerText = "Provinces: " + provinces.filter(province => province.owner === player).length
+        playerDiv.appendChild(cardCount)
+
         intelColumn.appendChild(playerDiv)
     })
 }
@@ -1309,7 +1313,7 @@ const cards = [
     },
     {
         name: "Kovačica",
-        img: "kovačica.bmp",
+        img: "kovacica.bmp",
         cardType: "Cavalry"
     },
     {
@@ -1435,7 +1439,7 @@ const cards = [
     {
         name: "Bački Petrovac",
         img: "backi_petrovac.bmp",
-        cardcardType: "Artillery"
+        cardType: "Artillery"
     },
 ]
 
@@ -1553,17 +1557,18 @@ function renderCards(){
         const title = document.createElement("b")
         title.innerText = logicCard.name
         const image = document.createElement("img")
-        image.src = "img/"+logicCard.img
+        image.src = "img/province/"+logicCard.img
         image.style = "width: 50px; height 50px;"
         image.alt = logicCard.img
         const cardType = document.createElement("img")
-        cardType.src = "img/"+logicCard.type+".bmp"
+        cardType.src = "img/"+logicCard.cardType+".bmp"
         cardType.style = "width: 50px; height 50px;"
         cardType.alt = logicCard.cardType
 
         card.appendChild(title)
         card.appendChild(document.createElement("br"))
         card.appendChild(image)
+        card.appendChild(document.createElement("br"))
         card.appendChild(cardType)
 
         cardsDiv.appendChild(card)

@@ -877,6 +877,7 @@ function attack() {
     }
     combatStats = rollDice(from, to)
     showCombat(combatStats)
+    hasAttackedThisTurn = true
     if (to.armies < 1) {
         let defeatedPlayer = to.owner
         to.owner = from.owner
@@ -996,6 +997,13 @@ function nextPhase() {
                 }
             }
             if (i == 1) {
+                if(!hasAttackedThisTurn)
+                {
+                    if(!confirm("You haven't attacked this turn. Skip attack phase?"))
+                    {
+                        return;
+                    }
+                }
                 if (conqueredProvince) {
                     getCard(turn)
                 }
@@ -1009,6 +1017,7 @@ function nextPhase() {
 
 function nextPlayer() {
     conqueredProvince = false
+    hasAttackedThisTurn = false
     const amountElement = document.getElementById("deployment-amount")
     for (let i = 0; i < players.length; i++) {
         if (turn == players[i]) {

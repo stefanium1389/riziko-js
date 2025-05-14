@@ -79,10 +79,41 @@ canvas {
     box-shadow: inset;
     margin: 5px;
     align-items: center;
-    width: 100px;
-    height: 150px;
+    max-width: 100px;
+    min-width: 100px;
+    max-height: 150px;
+    min-height: 150px;
     background-color: #ccc;
 }
 #my-cards {
     display: flex;
+}
+.player-turn {
+    border-width: 2px;
+    border-radius: 5px;
+    border-style: outset;
+    border-color: #bbb;
+}
+.red-border {
+    background-color: red;
+    color: white;
+}
+.blue-border {
+    background-color: blue;
+    color: white;
+}
+.green-border {
+    background-color: green;
+    color: white;
+}
+.black-border {
+    background-color: black;
+    color: white;
+}
+.yellow-border {
+    background-color: yellow;
+}
+.purple-border {
+    background-color: purple;
+    color: white;
 }

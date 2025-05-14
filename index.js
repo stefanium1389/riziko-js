@@ -6,6 +6,7 @@ let players_play = [true, true, true, true, true, true]
 let players = ["Red", "Blue", "Green", "Yellow", "Black"]
 let player_cards = []
 let turn = "Red"
+let hasAttackedThisTurn = false;
 let troopsForDeployment = 0
 const possible_phases = ["Deployment", "Combat", "Transfer"]
 let phase = "Deployment"
@@ -820,30 +821,16 @@ function drawTanks() {
         }
         let province = provinces[p]
         for (let i = 0; i < province.armies; i++) {
-            let img;
-            if (province.owner === "Red") {
-                img = document.getElementById("tank-red")
-            }
-            if (province.owner === "Blue") {
-                img = document.getElementById("tank-blue")
-            }
-            if (province.owner === "Green") {
-                img = document.getElementById("tank-green")
-            }
-            if (province.owner === "Yellow") {
-                img = document.getElementById("tank-yellow")
-            }
-            if (province.owner === "Purple") {
-                img = document.getElementById("tank-purple")
-            }
-            if (province.owner === "Black") {
-                img = document.getElementById("tank-black")
-            }
+            let img = document.getElementById("tank-" + province.owner.toLowerCase())
             y = 0
             x = 0
             if (!tank_coords[p][i]) {
                 x = Math.max(province.boundingBox.x, Math.floor(Math.random() * province.boundingBox.width) + province.boundingBox.x - img.width)
                 y = Math.max(province.boundingBox.y, Math.floor(Math.random() * province.boundingBox.height) + province.boundingBox.y - img.height)
+                while (tank_coords[p].includes({ x, y })) {
+                    x = Math.max(province.boundingBox.x, Math.floor(Math.random() * province.boundingBox.width) + province.boundingBox.x - img.width)
+                    y = Math.max(province.boundingBox.y, Math.floor(Math.random() * province.boundingBox.height) + province.boundingBox.y - img.height)
+                }
                 tank_coords[p].push({ x, y })
             }
             else {
@@ -963,7 +950,8 @@ function countTroopsForDeployment(player) {
     return result
 }
 function deploy() {
-    let amount = Number(document.getElementById("deployment-amount").value)
+    const amountElement = document.getElementById("deployment-amount")
+    let amount = Number(amountElement.value)
     if (amount > troopsForDeployment) {
         return;
     }
@@ -977,6 +965,9 @@ function deploy() {
     provinces[fromProvince].armies += amount;
     troopsForDeployment -= amount;
     renderState()
+    if (troopsForDeployment == 0) {
+        nextPhase()
+    }
     console.log(amount)
 }
 
@@ -1018,16 +1009,19 @@ function nextPhase() {
 
 function nextPlayer() {
     conqueredProvince = false
+    const amountElement = document.getElementById("deployment-amount")
     for (let i = 0; i < players.length; i++) {
         if (turn == players[i]) {
             if (i == players.length - 1) {
                 turn = players[0]
+                amountElement.value = undefined;
                 if (playerIsDead(turn)) {
                     nextPlayer()
                 }
                 break;
             }
             turn = players[i + 1]
+            amountElement.value = undefined;
             console.log(playerIsDead())
             if (playerIsDead(turn)) {
                 nextPlayer()
@@ -1067,7 +1061,10 @@ function renderIntel() {
         cardCount.innerText = "Cards: " + player_cards[players.indexOf(player)].length;
         provinceCount.innerText = "Provinces: " + provinces.filter(province => province.owner === player).length
         playerDiv.appendChild(cardCount)
-
+        if (player == turn) {
+            playerDiv.classList.add("player-turn")
+            playerDiv.classList.add(player.toLowerCase() + "-border")
+        }
         intelColumn.appendChild(playerDiv)
     })
 }
@@ -1096,7 +1093,8 @@ function checkWin() {
 function transfer() {
     console.log(fromProvince)
     if (fromProvince != undefined && toProvince != undefined) {
-        let amount = Number(document.getElementById("transfer-amount").value)
+        const amountElement = document.getElementById("transfer-amount")
+        let amount = Number(amountElement.value)
         if (amount > provinces[fromProvince].armies - 1) { return; }
         if (amount < 0) { return }
         if (provinces[fromProvince].owner != turn) {
@@ -1110,7 +1108,9 @@ function transfer() {
         if (hasPath(fromProvince, toProvince, turn)) {
             removeTanks(amount, fromProvince)
             provinces[toProvince].armies += amount
+            amountElement.value = undefined
             renderState()
+            nextPhase()
         }
         else {
             alert("Your provinces need to have a path between them")
@@ -1445,6 +1445,14 @@ const cards = [
         img: "backi_petrovac.bmp",
         cardType: "Artillery"
     },
+    {
+        name: "Wildcard",
+        cardType: "Wildcard"
+    },
+    {
+        name: "Wildcard",
+        cardType: "Wildcard"
+    },
 ]
 
 function getCard(player) {
@@ -1460,14 +1468,12 @@ function getCard(player) {
 
 function turnInCards() {
     let playerIndex = players.indexOf(turn)
-    console.log(playerIndex)
-    console.log(player_cards[playerIndex])
     let infantryCards = []
     let cavalryCards = []
     let artilleryCards = []
+    let wildcardCards = []
     for (let i = 0; i < player_cards[playerIndex].length; i++) {
         if (cards[player_cards[playerIndex][i]].cardType == "Infantry") {
-
             infantryCards.push(player_cards[playerIndex][i]);
         }
         if (cards[player_cards[playerIndex][i]].cardType == "Cavalry") {
@@ -1476,40 +1482,66 @@ function turnInCards() {
         if (cards[player_cards[playerIndex][i]].cardType == "Artillery") {
             artilleryCards.push(player_cards[playerIndex][i])
         }
+        if (cards[player_cards[playerIndex][i]].cardType == "Wildcard") {
+            wildcardCards.push(player_cards[playerIndex][i])
+        }
     }
-    console.log(infantryCards)
-    console.log(cavalryCards)
-    console.log(artilleryCards)
-    if (infantryCards.length >= 3) {
-        for (let i = 0; i < 3; i++) {
-            const index = player_cards[playerIndex].indexOf(infantryCards[i]);
-            if (index > -1) {
-                player_cards[playerIndex].splice(index, 1);
-            }
-            drawnCards.delete(infantryCards[i])
+    if (wildcardCards.length >= 1 & (infantryCards.length >= 2 || cavalryCards.length >= 2 || artilleryCards.length >= 2)) {
 
-        }
-        troopsForDeployment += 4
-    }
-    if (cavalryCards.length >= 3) {
-        for (let i = 0; i < 3; i++) {
-            const index = player_cards[playerIndex].indexOf(cavalryCards[i]);
+        if (infantryCards.length >= 2) {
+            let wildcardCard = wildcardCards.pop()
+            let index = player_cards[playerIndex].indexOf(wildcardCard);
+            drawnCards.delete(wildcardCard)
             if (index > -1) {
                 player_cards[playerIndex].splice(index, 1);
             }
-            drawnCards.delete(cavalryCards[i])
+            for (let i = 0; i < 2; i++) {
+                const index = player_cards[playerIndex].indexOf(infantryCards[i]);
+                if (index > -1) {
+                    player_cards[playerIndex].splice(index, 1);
+                }
+                drawnCards.delete(infantryCards[i])
+            }
+            troopsForDeployment += 12
+            renderState()
+            return;
         }
-        troopsForDeployment += 6
-    }
-    if (artilleryCards.length >= 3) {
-        for (let i = 0; i < 3; i++) {
-            const index = player_cards[playerIndex].indexOf(artilleryCards[i]);
+        if (cavalryCards.length >= 2) {
+            let wildcardCard = wildcardCards.pop()
+            let index = player_cards[playerIndex].indexOf(wildcardCard);
+            drawnCards.delete(wildcardCard)
             if (index > -1) {
                 player_cards[playerIndex].splice(index, 1);
             }
-            drawnCards.delete(artilleryCards[i])
+            for (let i = 0; i < 2; i++) {
+                const index = player_cards[playerIndex].indexOf(cavalryCards[i]);
+                if (index > -1) {
+                    player_cards[playerIndex].splice(index, 1);
+                }
+                drawnCards.delete(cavalryCards[i])
+            }
+            troopsForDeployment += 12
+            renderState()
+            return;
         }
-        troopsForDeployment += 8
+        if (artilleryCards.length >= 2) {
+            let wildcardCard = wildcardCards.pop()
+            let index = player_cards[playerIndex].indexOf(wildcardCard);
+            drawnCards.delete(wildcardCard)
+            if (index > -1) {
+                player_cards[playerIndex].splice(index, 1);
+            }
+            for (let i = 0; i < 2; i++) {
+                const index = player_cards[playerIndex].indexOf(artilleryCards[i]);
+                if (index > -1) {
+                    player_cards[playerIndex].splice(index, 1);
+                }
+                drawnCards.delete(artilleryCards[i])
+            }
+            troopsForDeployment += 12
+            renderState()
+            return;
+        }
     }
     if (artilleryCards.length >= 1 && cavalryCards.length >= 1 && infantryCards.length >= 1) {
         let artilleryCard = artilleryCards.pop()
@@ -1531,8 +1563,47 @@ function turnInCards() {
         drawnCards.delete(cavalryCard)
         drawnCards.delete(infantryCard)
         troopsForDeployment += 10
+        renderState()
+        return;
     }
-    renderState()
+    if (artilleryCards.length >= 3) {
+        for (let i = 0; i < 3; i++) {
+            const index = player_cards[playerIndex].indexOf(artilleryCards[i]);
+            if (index > -1) {
+                player_cards[playerIndex].splice(index, 1);
+            }
+            drawnCards.delete(artilleryCards[i])
+        }
+        troopsForDeployment += 8
+        renderState()
+        return;
+    }
+    if (cavalryCards.length >= 3) {
+        for (let i = 0; i < 3; i++) {
+            const index = player_cards[playerIndex].indexOf(cavalryCards[i]);
+            if (index > -1) {
+                player_cards[playerIndex].splice(index, 1);
+            }
+            drawnCards.delete(cavalryCards[i])
+        }
+        troopsForDeployment += 6
+        renderState()
+        return;
+    }
+
+    if (infantryCards.length >= 3) {
+        for (let i = 0; i < 3; i++) {
+            const index = player_cards[playerIndex].indexOf(infantryCards[i]);
+            if (index > -1) {
+                player_cards[playerIndex].splice(index, 1);
+            }
+            drawnCards.delete(infantryCards[i])
+
+        }
+        troopsForDeployment += 4
+        renderState()
+        return;
+    }
 }
 
 function transferCards(fromPlayer, toPlayer) {
@@ -1558,23 +1629,41 @@ function renderCards() {
         let logicCard = cards[player_cards[playerIndex][i]]
         const card = document.createElement("div")
         card.classList.add("card")
-        const title = document.createElement("b")
-        title.innerText = logicCard.name
-        const image = document.createElement("img")
-        image.src = "img/province/" + logicCard.img
-        image.style = "width: 50px; height 50px;"
-        image.alt = logicCard.img
-        const cardType = document.createElement("img")
-        cardType.src = "img/" + logicCard.cardType + ".bmp"
-        cardType.style = "width: 50px; height 50px;"
-        cardType.alt = logicCard.cardType
+        if (logicCard.cardType != "Wildcard") {
 
-        card.appendChild(title)
-        card.appendChild(document.createElement("br"))
-        card.appendChild(image)
-        card.appendChild(document.createElement("br"))
-        card.appendChild(cardType)
+            const title = document.createElement("b")
+            title.innerText = logicCard.name
+            const image = document.createElement("img")
+            image.src = "img/province/" + logicCard.img
+            image.style = "width: 50px; height 50px;"
+            image.alt = logicCard.img
+            const cardType = document.createElement("img")
+            cardType.src = "img/" + logicCard.cardType + ".bmp"
+            cardType.style = "width: 50px; height 50px;"
+            cardType.alt = logicCard.cardType
 
+            card.appendChild(title)
+            card.appendChild(document.createElement("br"))
+            card.appendChild(image)
+            card.appendChild(document.createElement("br"))
+            card.appendChild(cardType)
+
+            
+        }
+        else{
+            const infantryImage = document.createElement("img")
+            const cavalryImage = document.createElement("img")
+            const artilleryImage = document.createElement("img")
+            infantryImage.src = "img/Infantry.bmp"
+            cavalryImage.src = "img/Cavalry.bmp"
+            artilleryImage.src = "img/Artillery.bmp"
+
+            card.appendChild(infantryImage)
+            card.appendChild(document.createElement("br"))
+            card.appendChild(cavalryImage)
+            card.appendChild(document.createElement("br"))
+            card.appendChild(artilleryImage)
+        }
         cardsDiv.appendChild(card)
     }
 }

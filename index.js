@@ -141,7 +141,7 @@ function renderState() {
     const turnInCardsButton = document.getElementById("turn-in-cards-btn")
     turnInCardsButton.classList.add("invisible")
     turnInCardsButton.style.display = "none"
-    if(player_cards[players.indexOf(turn)].length >=3 ){
+    if (player_cards[players.indexOf(turn)].length >= 3) {
         turnInCardsButton.style.display = "block"
     }
     turnInCardsButton.display = ""
@@ -781,6 +781,7 @@ const provinces = [
 function getProvinceFromRgb(rgb) {
     xd = provinces.findIndex(province => province.rgb[0] === rgb[0] && province.rgb[1] === rgb[1] && province.rgb[2] === rgb[2])
     // console.log(xd, provinces[xd])
+    if (xd == -1) { xd = undefined }
     return xd
 }
 
@@ -901,8 +902,7 @@ function attack() {
             to.armies += aNumber
             from.armies -= aNumber
             conqueredProvince = true
-            if(playerIsDead(defeatedPlayer))
-            {
+            if (playerIsDead(defeatedPlayer)) {
                 transferCards(defeatedPlayer, turn)
             }
             renderState()
@@ -1064,7 +1064,7 @@ function renderIntel() {
         let provinceCount = document.createElement("div")
         let cardCount = document.createElement("div")
         playerDiv.appendChild(provinceCount)
-        cardCount.innerText = "Cards: "+ player_cards[players.indexOf(player)].length;
+        cardCount.innerText = "Cards: " + player_cards[players.indexOf(player)].length;
         provinceCount.innerText = "Provinces: " + provinces.filter(province => province.owner === player).length
         playerDiv.appendChild(cardCount)
 
@@ -1094,7 +1094,8 @@ function checkWin() {
 }
 
 function transfer() {
-    if (fromProvince && toProvince) {
+    console.log(fromProvince)
+    if (fromProvince != undefined && toProvince != undefined) {
         let amount = Number(document.getElementById("transfer-amount").value)
         if (amount > provinces[fromProvince].armies - 1) { return; }
         if (amount < 0) { return }
@@ -1118,7 +1119,8 @@ function transfer() {
 }
 
 function hasPath(from, to, player, visited = new Set()) {
-    if (provinces[from].adjacencies.includes(to)) { return true }
+    console.log(provinces[from].adjacencies.includes(to))
+    if (provinces[from].adjacencies.includes(to)) { console.log("has path!"); return true }
     if (visited.has(from)) { return false; }
     visited.add(from);
     for (let index of provinces[from].adjacencies) {
@@ -1130,12 +1132,14 @@ function hasPath(from, to, player, visited = new Set()) {
     }
     return false;
 }
+
 function removeTanks(amount, provinceIndex) {
     provinces[provinceIndex].armies -= amount
     for (let i = 0; i < amount; i++) {
         tank_coords[provinceIndex].pop()
     }
 }
+
 function initialiseGame() {
     //which players play and randomise player order
     players = []
@@ -1463,7 +1467,7 @@ function turnInCards() {
     let artilleryCards = []
     for (let i = 0; i < player_cards[playerIndex].length; i++) {
         if (cards[player_cards[playerIndex][i]].cardType == "Infantry") {
-            
+
             infantryCards.push(player_cards[playerIndex][i]);
         }
         if (cards[player_cards[playerIndex][i]].cardType == "Cavalry") {
@@ -1531,40 +1535,37 @@ function turnInCards() {
     renderState()
 }
 
-function transferCards(fromPlayer, toPlayer){
+function transferCards(fromPlayer, toPlayer) {
     console.log(player_cards)
     let fromIndex = players.indexOf(fromPlayer)
     let toIndex = players.indexOf(toPlayer)
-    for(let i = 0; i < player_cards[fromIndex].length; i++)
-    {
+    for (let i = 0; i < player_cards[fromIndex].length; i++) {
         let card = player_cards[fromIndex][i]
         console.log(card)
         player_cards[toIndex].push(card)
     }
     player_cards[fromIndex] = []
-    if(player_cards[toIndex].length >= 5)
-    {
+    if (player_cards[toIndex].length >= 5) {
         phase = possible_phases[0]
     }
 }
 
-function renderCards(){
+function renderCards() {
     const cardsDiv = document.getElementById("my-cards")
     cardsDiv.innerHTML = ""
     let playerIndex = players.indexOf(turn)
-    for(let i = 0; i < player_cards[playerIndex].length; i++)
-    {
+    for (let i = 0; i < player_cards[playerIndex].length; i++) {
         let logicCard = cards[player_cards[playerIndex][i]]
         const card = document.createElement("div")
         card.classList.add("card")
         const title = document.createElement("b")
         title.innerText = logicCard.name
         const image = document.createElement("img")
-        image.src = "img/province/"+logicCard.img
+        image.src = "img/province/" + logicCard.img
         image.style = "width: 50px; height 50px;"
         image.alt = logicCard.img
         const cardType = document.createElement("img")
-        cardType.src = "img/"+logicCard.cardType+".bmp"
+        cardType.src = "img/" + logicCard.cardType + ".bmp"
         cardType.style = "width: 50px; height 50px;"
         cardType.alt = logicCard.cardType
 

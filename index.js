@@ -68,7 +68,6 @@ function showToolTip(index, x, y) {
 
 }
 
-
 function renderState() {
     const attackDiv = document.getElementById("attack")
     const deploymentDiv = document.getElementById("deploy")
@@ -140,12 +139,13 @@ function renderState() {
         transferTo.innerText = ""
     }
     const turnInCardsButton = document.getElementById("turn-in-cards-btn")
-    turnInCardsButton.classList.add("invisible")
     turnInCardsButton.style.display = "none"
-    if (player_cards[players.indexOf(turn)].length >= 3) {
+    turnInCardsButton.innerText = "Turn in cards"
+    let num = howManyCardsWhenTurningIn()
+    if (num > 0) {
         turnInCardsButton.style.display = "block"
+        turnInCardsButton.innerText = "Turn in cards (+"+num+")"
     }
-    turnInCardsButton.display = ""
     renderIntel()
     renderCards()
     renderCanvas()
@@ -157,6 +157,7 @@ function renderCanvas() {
     ctx.drawImage(img, 0, 0)
     drawTanks()
 }
+
 var timeout;
 var tooltip = undefined;
 
@@ -183,10 +184,6 @@ function getMousePos(canvas, evt) {
         x: Math.floor((evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width),
         y: Math.floor((evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height)
     };
-}
-
-function calculateTurn() {
-
 }
 
 const provinces = [
@@ -860,6 +857,7 @@ function showCombat(combatStats) {
     parent.appendChild(defenderLoses)
 
 }
+
 function attack() {
     from = provinces[fromProvince];
     to = provinces[toProvince]
@@ -901,6 +899,7 @@ function attack() {
         renderState()
     }
 }
+
 function rollDice(from, to) {
     attackersToSubstract = 0
     defendersToSubstract = 0
@@ -950,6 +949,7 @@ function countTroopsForDeployment(player) {
     });
     return result
 }
+
 function deploy() {
     const amountElement = document.getElementById("deployment-amount")
     let amount = Number(amountElement.value)
@@ -997,10 +997,8 @@ function nextPhase() {
                 }
             }
             if (i == 1) {
-                if(!hasAttackedThisTurn)
-                {
-                    if(!confirm("You haven't attacked this turn. Skip attack phase?"))
-                    {
+                if (!hasAttackedThisTurn) {
+                    if (!confirm("You haven't attacked this turn. Skip attack phase?")) {
                         return;
                     }
                 }
@@ -1657,15 +1655,18 @@ function renderCards() {
             card.appendChild(document.createElement("br"))
             card.appendChild(cardType)
 
-            
+
         }
-        else{
+        else {
             const infantryImage = document.createElement("img")
             const cavalryImage = document.createElement("img")
             const artilleryImage = document.createElement("img")
             infantryImage.src = "img/Infantry.bmp"
+            infantryImage.style = "width: 50px; height 50px;"
             cavalryImage.src = "img/Cavalry.bmp"
+            cavalryImage.style = "width: 50px; height 50px;"
             artilleryImage.src = "img/Artillery.bmp"
+            artilleryImage.style = "width: 50px; height 50px;"
 
             card.appendChild(infantryImage)
             card.appendChild(document.createElement("br"))
@@ -1675,4 +1676,33 @@ function renderCards() {
         }
         cardsDiv.appendChild(card)
     }
+}
+
+function howManyCardsWhenTurningIn() {
+    let playerIndex = players.indexOf(turn)
+    let infantryCards = []
+    let cavalryCards = []
+    let artilleryCards = []
+    let wildcardCards = []
+    for (let i = 0; i < player_cards[playerIndex].length; i++) {
+        if (cards[player_cards[playerIndex][i]].cardType == "Infantry") {
+            infantryCards.push(player_cards[playerIndex][i]);
+        }
+        if (cards[player_cards[playerIndex][i]].cardType == "Cavalry") {
+            cavalryCards.push(player_cards[playerIndex][i]);
+        }
+        if (cards[player_cards[playerIndex][i]].cardType == "Artillery") {
+            artilleryCards.push(player_cards[playerIndex][i])
+        }
+        if (cards[player_cards[playerIndex][i]].cardType == "Wildcard") {
+            wildcardCards.push(player_cards[playerIndex][i])
+        }
+    }
+
+    if (wildcardCards.length >= 1 & (infantryCards.length >= 2 || cavalryCards.length >= 2 || artilleryCards.length >= 2)) { return 12; }
+    if (artilleryCards.length >= 1 && cavalryCards.length >= 1 && infantryCards.length >= 1) { return 10; }
+    if (artilleryCards.length >= 3) { return 8; }
+    if (cavalryCards.length >= 3) { return 6; }
+    if (infantryCards.length >= 3) { return 4; }
+    return 0;
 }
